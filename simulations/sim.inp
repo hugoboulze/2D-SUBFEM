@@ -1,0 +1,85 @@
+%
+****calcul 
+  ***mesh plane_strain
+  **file ../mesh_test.geof
+
+  ***resolution
+  **sequence 
+  *time        0.9999 1.  10. 30.  365. 730.  1095. 1825. 3650. %here the simulation is made over 10 years = 365*10
+   *iteration 10
+   *ratio    1.e-2
+   *algorithm p1p2p3
+  **automatic_time  epcum 0.001 eicum 0.001
+   *divergence 2.0 4
+   *security   1.2
+
+   *first_dtime 0.9999  1.e-4  1.  1.  30.  30.  60. 120. 365.
+   *max_dtime   0.9999  1.e-4 10. 10.  30.  30.  60. 120. 365.
+ 
+ ***output
+   **frequency
+    *dtime 30. 
+   **output_first                
+   **node
+   **no_reaction
+   **component epcum sig11 sig22 sig33 sig12 sig::mises eto
+
+
+ ***bc
+  **impose_nodal_dof 
+    %fixed bottom and lateral faces
+    EAST    U1 0. 
+    EAST    U2 0. 
+    WEST    U1 0. 
+    WEST    U2 0.   
+    BOTTOM  U1 0.
+    BOTTOM  U2 0.
+    
+ % **simili_gravity
+ %  *nset EARTH_SURFACE
+ %  *factor 29430.  % rho*g = 3000*9.81 (time disapear from equation, not needed to convert m/s-2 in m/j-2 %3.0 density of the lithosphere
+ %  *origin (0. 0. 0.)
+
+  ***equation 
+   **earthquake
+    fault_plane_B  U1    
+    fault_plane_A  U1
+   *translation ascii_file ../disp_U1.dat T_EQ
+
+   **earthquake
+    fault_plane_B  U2  
+    fault_plane_A  U2       
+   *translation ascii_file ../disp_U2.dat T_EQ
+
+ ***table
+  **name CONSTANT
+   *time 0.  1.e+30
+   *value 1. 1.
+  **name T_EQ
+   *time  0. 0.9999 1. 1.e30 % the earthquake last 1 minute
+   *value 0. 0.     1. 1. 
+
+
+ ***parameter
+  **function profondeur_m   % Par convention, je la prends negative
+   *function y; 
+   *tables CONSTANT
+  **function profondeur_km  % Par convention, je la prends negative
+   *function y/1000.; 
+   *tables CONSTANT
+
+  ***material 
+  
+   **elset LITHO-CONTI *file ../lithosphere.mat
+   **elset LITHO-OCEAN *file ../lithosphere.mat
+   **elset SLAB *file ../lithosphere.mat
+
+   **elset ASTHENO-1-CONTI *file ../burgers_S=1.mat
+   **elset ASTHENO-2-CONTI *file ../burgers_S=1.mat
+
+   **elset ASTHENO-1-OCEAN *file ../burgers_S=1.mat
+   **elset ASTHENO-2-OCEAN *file ../burgers_S=1.mat
+   
+   **elset MANTLE  *file ../lithosphere.mat
+   
+****return
